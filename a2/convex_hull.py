@@ -1,3 +1,7 @@
+"""
+Name: Sam Calise and Nick Robillard
+"""
+
 import math
 import sys
 from typing import List
