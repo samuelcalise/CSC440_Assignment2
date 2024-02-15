@@ -97,21 +97,6 @@ def base_case_hull(points: List[Point]) -> List[Point]:
     # TODO: You need to implement this function.
     return points
 
-    def finding_starting_point(point_list: List[Point]) -> Point:
-        "Finds the starting point"
-        leftmost = point_list[0]
-        for point in point_list[1:]:
-            if point[0] < leftmost[0] or (point[0] == leftmost[0] and point[1] < leftmost[1]):
-                leftmost = point
-        return leftmost
-
-    def left_check(a: Point, b: Point, c: Point) -> bool:
-        "Checks if c is left of the cross product of a and b"
-        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0
-
-
-    final = jarvis(points)
-    return final
 
 # is this supposed to be a list of points idk
 def left_point(points: List[Point]) -> List[Point]:
@@ -120,9 +105,6 @@ def left_point(points: List[Point]) -> List[Point]:
     leftmost_point = points[0]
 
     return leftmost_point
-
-
-
 
 
 def compute_hull(points: List[Point]) -> List[Point]:
