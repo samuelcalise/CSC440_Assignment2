@@ -94,30 +94,8 @@ def sort_clockwise(points: List[Point]):
 def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
     """
-    def jarvis(point_list: List[Point]) -> List[Point]:
-        """Computes the convex hull of the list"""
-
-        length = len(point_list)
-        if length <= 3:
-            return point_list
-
-        start = finding_starting_point(point_list)
-        current = start
-        hull = []
-
-        while True:
-            hull.append(current)
-            next_point = point_list[0]  # Initialize with any point
-            for point in point_list:
-                if next_point == current:
-                    next_point = point
-                elif left_check(current, next_point, point):
-                    next_point = point
-            current = next_point
-            if current == start:
-                break
-
-        return hull
+    # TODO: You need to implement this function.
+    return points
 
     def finding_starting_point(point_list: List[Point]) -> Point:
         "Finds the starting point"
