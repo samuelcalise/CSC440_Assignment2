@@ -94,8 +94,57 @@ def sort_clockwise(points: List[Point]):
 def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
     """
+    def jarvis(point_list: List[Point]) -> List[Point]:
+        """Computes the convex hull of the list"""
+
+        length = len(point_list)
+        if length <= 3:
+            return point_list
+
+        start = finding_starting_point(point_list)
+        current = start
+        hull = []
+
+        while True:
+            hull.append(current)
+            next_point = point_list[0]  # Initialize with any point
+            for point in point_list:
+                if next_point == current:
+                    next_point = point
+                elif left_check(current, next_point, point):
+                    next_point = point
+            current = next_point
+            if current == start:
+                break
+
+        return hull
+
+    def finding_starting_point(point_list: List[Point]) -> Point:
+        "Finds the starting point"
+        leftmost = point_list[0]
+        for point in point_list[1:]:
+            if point[0] < leftmost[0] or (point[0] == leftmost[0] and point[1] < leftmost[1]):
+                leftmost = point
+        return leftmost
+
+    def left_check(a: Point, b: Point, c: Point) -> bool:
+        "Checks if c is left of the cross product of a and b"
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0
+
+
+    final = jarvis(points)
+    return final
+
+# is this supposed to be a list of points idk
+def left_point(points: List[Point]) -> List[Point]:
+    """ Finds the left point of the convex hull """
     # TODO: You need to implement this function.
-    return points
+    leftmost_point = points[0]
+
+    return leftmost_point
+
+
+
 
 
 def compute_hull(points: List[Point]) -> List[Point]:
