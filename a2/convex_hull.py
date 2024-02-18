@@ -14,7 +14,7 @@ Point = Tuple[int, int]
 def y_intercept(p1: Point, p2: Point, x: int) -> float:
     """
     Given two points, p1 and p2, an x coordinate from a vertical line,
-    compute and return the the y-intercept of the line segment p1->p2
+    compute and return the y-intercept of the line segment p1->p2
     with the vertical line passing through x.
     """
     x1, y1 = p1
@@ -85,7 +85,7 @@ def sort_clockwise(points: List[Point]):
     def sort_key(point: Point):
         angle = math.atan2(point[1] - centroid_y, point[0] - centroid_x)
         normalized_angle = (angle + math.tau) % math.tau
-        return (normalized_angle, point[0], point[1])
+        return normalized_angle, point[0], point[1]
 
     # Sort the points
     points.sort(key=sort_key)
@@ -94,17 +94,13 @@ def sort_clockwise(points: List[Point]):
 def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
     """
-    # TODO: You need to implement this function.
-    return points
+    if len(points) < 4:
+        return points
 
+    # Sorting the provided points
+    points.sort()
 
-# is this supposed to be a list of points idk
-def left_point(points: List[Point]) -> List[Point]:
-    """ Finds the left point of the convex hull """
-    # TODO: You need to implement this function.
-    leftmost_point = points[0]
-
-    return leftmost_point
+    return [points[0], points[-1]]
 
 
 def compute_hull(points: List[Point]) -> List[Point]:
@@ -115,4 +111,65 @@ def compute_hull(points: List[Point]) -> List[Point]:
     # TODO: Implement a correct computation of the convex hull
     #  using the divide-and-conquer algorithm
     # TODO: Document your Initialization, Maintenance and Termination invariants.
-    return points
+    sort_clockwise(points)
+
+    return divide_n_conquer_algo(points)
+
+
+def divide_n_conquer_algo(points: List[Point]) -> List[Point]:
+    # Implementing base case of left and right hull lists
+    if len(points) <= 3:
+        return base_case_hull(points)
+
+    # Divide master lst `points` into required divided lists
+    # dependent on the sorted midpoint
+    my_mid_point = len(points) // 2
+    left_hull_list = points[:my_mid_point]
+    right_hull_list = points[my_mid_point:]
+
+    left_hull_list = divide_n_conquer_algo(left_hull_list)
+    right_hull_list = divide_n_conquer_algo(right_hull_list)
+
+    finalized_list = combine_hull_lists(left_hull_list, right_hull_list)
+
+    return finalized_list
+
+def combine_hull_lists(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
+    # One time lambda function to get the highest point from
+    # the left and the lowest point in the right list
+    highest_point = max(left_hull, key=lambda p: p[1])
+    lowest_point = min(right_hull, key=lambda p: p[1])
+
+    UPPER_tangent = get_tangent_value(left_hull, highest_point, lowest_point, compare=lambda a, b: a < b)
+    LOWER_tangent = get_tangent_value(right_hull, highest_point, lowest_point, compare=lambda a, b: a > b)
+
+    # Ensure the tangent points are within their respective hull lists
+    if UPPER_tangent not in left_hull:
+        return right_hull
+    if LOWER_tangent not in right_hull:
+        return left_hull
+
+    # Pointing out the 4 corners within the list of points
+    UPPER_left_idx = left_hull.index(UPPER_tangent)
+    UPPER_right_idx = right_hull.index(UPPER_tangent)
+
+    LOWER_left_idx = left_hull.index(LOWER_tangent)
+    LOWER_right_idx = right_hull.index(LOWER_tangent)
+
+    combined_lists = (left_hull[:UPPER_left_idx] +
+                      right_hull[UPPER_right_idx:LOWER_right_idx + 1] +
+                      left_hull[LOWER_left_idx:])
+
+    return combined_lists
+
+
+def get_tangent_value(hull: List[Point], highest_p: Point, lowest_p: Point, compare) -> Point:
+    for some_element in range(len(hull)):
+        first_point = hull[some_element]
+        second_point = hull[(some_element + 1) % len(hull)]
+
+        if compare(triangle_area(highest_p, lowest_p, first_point), 0) and \
+                compare(triangle_area(highest_p, lowest_p, second_point), 0) and \
+                is_counter_clockwise(highest_p, lowest_p, first_point) and \
+                is_counter_clockwise(highest_p, lowest_p, second_point):
+            return first_point
