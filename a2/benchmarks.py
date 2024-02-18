@@ -45,6 +45,7 @@ def run_benchmarks():
         points = generate_points(n)
         start_time = time.time()
         # TODO: call compute_hull here
+        compute_hull(points)
         time_taken = time.time() - start_time  # time taken (in seconds) for divide-and-conquer
 
         print(f'dnc_time_taken: {time_taken:.3f},', end=' ')
@@ -52,19 +53,20 @@ def run_benchmarks():
 
         start_time = time.time()
         # TODO: call base_case_hull here
+        base_case_hull(points)
         time_taken = time.time() - start_time  # time taken (in seconds) for naive
 
         print(f'naive_time_taken: {time_taken:.3f}')
         naive_hull_times.append(time_taken)
 
     plt.scatter(sizes, dnc_hull_times, c='blue')
-    plt.plot(sizes, dnc_hull_times, c='blue', label='add label here')
+    plt.plot(sizes, dnc_hull_times, c='blue', label='Divide and Conquer Algorithm')
     plt.scatter(sizes, naive_hull_times, c='red')
-    plt.plot(sizes, naive_hull_times, c='red', label='add label here')
+    plt.plot(sizes, naive_hull_times, c='red', label='Naive Algorithm')
     plt.legend()
-    plt.xlabel('add x-label here')
-    plt.ylabel('add y-label here')
-    plt.title('Add title here')
+    plt.xlabel('Number of Points')
+    plt.ylabel('Record Runtime')
+    plt.title('Benchmark Graph')
     plt.savefig('benchmark_plot.png')
     return
 
