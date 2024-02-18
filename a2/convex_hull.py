@@ -94,7 +94,7 @@ def sort_clockwise(points: List[Point]):
 def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
     """
-    if len(points) < 4:
+    if len(points) <= 4:
         return points
 
     # Sorting the provided points
