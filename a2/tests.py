@@ -6,11 +6,12 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from convex_hull import Point
-from convex_hull import clockwise_sort
 from convex_hull import compute_hull
 from convex_hull import is_clockwise
 from convex_hull import is_counter_clockwise
 from convex_hull import y_intercept
+from convex_hull import base_case_hull
+from convex_hull import sort_clockwise
 
 
 class TestGivenFunctions(unittest.TestCase):
@@ -93,3 +94,22 @@ class TestComputeHull(unittest.TestCase):
         hull = compute_hull(points)
         self.assertTrue(is_convex_hull(hull, points))
         return
+
+    @given(st.lists(  # generate a list
+        st.tuples(  # of 2-tuples
+            st.integers(min_value=0, max_value=100_000),  # of integers in the interval [0, 100_000]
+            st.integers(min_value=0, max_value=100_000),
+        ),
+        min_size=3,  # minimum length of list
+        max_size=1000,  # maximum length of list
+        unique=True,  # list will contain unique elements
+    ))
+    def test_basecase_hull(self, points):
+        points = list(points)
+        sort_clockwise(points)
+
+        hull = base_case_hull(points)
+        self.assertTrue(is_convex_hull(hull, points))
+        return
+
+
