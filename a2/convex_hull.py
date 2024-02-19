@@ -1,15 +1,13 @@
-"""
-Name: Sam Calise and Nick Robillard
-"""
-
 import math
 import sys
 from typing import List
 from typing import Tuple
+from functools import cmp_to_key
 
 EPSILON = sys.float_info.epsilon
 Point = Tuple[int, int]
 
+mid = [0, 0]
 
 def y_intercept(p1: Point, p2: Point, x: int) -> float:
     """
@@ -85,22 +83,78 @@ def sort_clockwise(points: List[Point]):
     def sort_key(point: Point):
         angle = math.atan2(point[1] - centroid_y, point[0] - centroid_x)
         normalized_angle = (angle + math.tau) % math.tau
-        return normalized_angle, point[0], point[1]
+        return (normalized_angle, point[0], point[1])
 
     # Sort the points
     points.sort(key=sort_key)
+
+# determines the quadrant of a point
+# (used in compare())
+def quad(p):
+    if p[0] >= 0 and p[1] >= 0:
+        return 1
+    if p[0] <= 0 and p[1] >= 0:
+        return 2
+    if p[0] <= 0 and p[1] <= 0:
+        return 3
+    return 4
+
+
+# compare function for sorting
+def compare(p1, q1):
+    p = [p1[0] - mid[0], p1[1] - mid[1]]
+    q = [q1[0] - mid[0], q1[1] - mid[1]]
+    one = quad(p)
+    two = quad(q)
+
+    if one != two:
+        if one < two:
+            return -1
+        return 1
+    if p[1] * q[0] < q[1] * p[0]:
+        return -1
+    return 1
 
 
 def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
     """
-    if len(points) <= 4:
-        return points
+    global mid
+    s = set()
+    for i in range(len(points)):
+        for j in range(i + 1, len(points)):
+            x1, x2 = points[i][0], points[j][0]
+            y1, y2 = points[i][1], points[j][1]
+            a1, b1, c1 = y1 - y2, x2 - x1, x1 * y2 - y1 * x2
+            pos, neg = 0, 0
+            for k in range(len(points)):
+                if (k == i) or (k == j) or (a1 * points[k][0] + b1 * points[k][1] + c1 <= 0):
+                    neg += 1
+                if (k == i) or (k == j) or (a1 * points[k][0] + b1 * points[k][1] + c1 >= 0):
+                    pos += 1
+            if pos == len(points) or neg == len(points):
+                s.add(tuple(points[i]))
+                s.add(tuple(points[j]))
 
-    # Sorting the provided points
-    points.sort()
+    ret = list(s)
 
-    return [points[0], points[-1]]
+    # Sorting the points in the anti-clockwise order
+    mid = [0, 0]
+    n = len(ret)
+
+    modified_points = []
+    for point in ret:
+        mid[0] += point[0]
+        mid[1] += point[1]
+        modified_points.append((point[0] * n, point[1] * n))
+
+    ret = modified_points
+    ret = sorted(ret, key=cmp_to_key(compare))
+    for i in range(n):
+        ret[i] = (ret[i][0] // n, ret[i][1] // n)
+
+    return ret
+
 
 
 def compute_hull(points: List[Point]) -> List[Point]:
@@ -111,65 +165,22 @@ def compute_hull(points: List[Point]) -> List[Point]:
     # TODO: Implement a correct computation of the convex hull
     #  using the divide-and-conquer algorithm
     # TODO: Document your Initialization, Maintenance and Termination invariants.
-    sort_clockwise(points)
 
-    return divide_n_conquer_algo(points)
-
-
-def divide_n_conquer_algo(points: List[Point]) -> List[Point]:
-    # Implementing base case of left and right hull lists
-    if len(points) <= 3:
+    if len(points) <= 6:
         return base_case_hull(points)
 
-    # Divide master lst `points` into required divided lists
-    # dependent on the sorted midpoint
-    my_mid_point = len(points) // 2
-    left_hull_list = points[:my_mid_point]
-    right_hull_list = points[my_mid_point:]
+    # divides points into two lists
+    left = []
+    right = []
+    middle = len(points) // 2
 
-    left_hull_list = divide_n_conquer_algo(left_hull_list)
-    right_hull_list = divide_n_conquer_algo(right_hull_list)
+    for i in range(middle):
+        left.append(points[i])
+    for i in range(middle, len(points)):
+        right.append(points[i])
 
-    finalized_list = combine_hull_lists(left_hull_list, right_hull_list)
+    print(left)
+    print('\n')
+    print(right)
 
-    return finalized_list
-
-def combine_hull_lists(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
-    # One time lambda function to get the highest point from
-    # the left and the lowest point in the right list
-    highest_point = max(left_hull, key=lambda p: p[1])
-    lowest_point = min(right_hull, key=lambda p: p[1])
-
-    UPPER_tangent = get_tangent_value(left_hull, highest_point, lowest_point, compare=lambda a, b: a < b)
-    LOWER_tangent = get_tangent_value(right_hull, highest_point, lowest_point, compare=lambda a, b: a > b)
-
-    # Ensure the tangent points are within their respective hull lists
-    if UPPER_tangent not in left_hull:
-        return right_hull
-    if LOWER_tangent not in right_hull:
-        return left_hull
-
-    # Pointing out the 4 corners within the list of points
-    UPPER_left_idx = left_hull.index(UPPER_tangent)
-    UPPER_right_idx = right_hull.index(UPPER_tangent)
-
-    LOWER_left_idx = left_hull.index(LOWER_tangent)
-    LOWER_right_idx = right_hull.index(LOWER_tangent)
-
-    combined_lists = (left_hull[:UPPER_left_idx] +
-                      right_hull[UPPER_right_idx:LOWER_right_idx + 1] +
-                      left_hull[LOWER_left_idx:])
-
-    return combined_lists
-
-
-def get_tangent_value(hull: List[Point], highest_p: Point, lowest_p: Point, compare) -> Point:
-    for some_element in range(len(hull)):
-        first_point = hull[some_element]
-        second_point = hull[(some_element + 1) % len(hull)]
-
-        if compare(triangle_area(highest_p, lowest_p, first_point), 0) and \
-                compare(triangle_area(highest_p, lowest_p, second_point), 0) and \
-                is_counter_clockwise(highest_p, lowest_p, first_point) and \
-                is_counter_clockwise(highest_p, lowest_p, second_point):
-            return first_point
+    return points
