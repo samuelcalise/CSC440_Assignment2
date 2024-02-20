@@ -144,31 +144,63 @@ def compute_hull(points: List[Point]) -> List[Point]:
     left_hull = compute_hull(left)
     right_hull = compute_hull(right)
 
-    merged = merge_convex_hulls(left_hull, right_hull)
+    UPPER_left, UPPER_right = find_UPPER_tangent(left_hull, right_hull)
+    LOWER_left, LOWER_right = find_LOWER_tangent(left_hull, right_hull)
+
+    merged = merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hull, right_hull)
 
     return merged
 
-def find_upper_tangent(left_hull, right_hull):
+def find_UPPER_tangent(left_hull, right_hull):
     """
     Finds the upper tangent between the left and right hulls.
     """
 
+    i = left_hull.index(max(left_hull))
+    j = right_hull.index(min(right_hull))
 
-    return left_hull, right_hull
+    while True:
+        if is_counter_clockwise(left_hull[i], right_hull[j], right_hull[j+1]):
+            j += 1 % len(right_hull)
+
+        elif is_clockwise(right_hull[j], left_hull[i], left_hull[i-1]):
+            i = (i - 1) % len(left_hull)
+
+        else:
+            break
+
+    return left_hull[i], right_hull[j]
 
 
-def find_lower_tangent(left_hull, right_hull):
+def find_LOWER_tangent(left_hull, right_hull):
     """
-    Finds the lower tangent between the left and right hulls.
+    Finds the upper tangent between the left and right hulls.
     """
 
+    i = left_hull.index(max(left_hull))
+    j = right_hull.index(min(right_hull))
 
-    return left_hull, right_hull
+    while True:
+        if is_counter_clockwise(right_hull[j], left_hull[i], left_hull[i + 1]):
+            i += 1 % len(left_hull)
+
+        elif is_clockwise(left_hull[i], right_hull[j], right_hull[j - 1]):
+            j = (j - 1) % len(right_hull)
+
+        else:
+            break
+
+    return left_hull[i], right_hull[j]
 
 
 def merge_convex_hulls(left_hull, right_hull):
     """
-    Merges the left and right convex hulls.
+        while RH[UR] != RH[LR]
+            * add point
+            LR += UR % len(RH)
+
+        add RH[LR]
+
     """
 
     return 0
