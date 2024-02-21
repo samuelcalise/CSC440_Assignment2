@@ -141,66 +141,95 @@ def compute_hull(points: List[Point]) -> List[Point]:
     left = points[:middle]
     right = points[middle:]
 
+    print("left hull:",left,'\n',"RIght hul:",right)
+
+
     left_hull = compute_hull(left)
     right_hull = compute_hull(right)
 
-    UPPER_left, UPPER_right = find_UPPER_tangent(left_hull, right_hull)
-    LOWER_left, LOWER_right = find_LOWER_tangent(left_hull, right_hull)
-
-    merged = merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hull, right_hull)
+    merged = merge_convex_hulls(left_hull, right_hull)
 
     return merged
 
-def find_UPPER_tangent(left_hull, right_hull):
+
+
+
+
+def find_upper_tangent(left_hull, right_hull):
     """
     Finds the upper tangent between the left and right hulls.
     """
-
-    i = left_hull.index(max(left_hull))
-    j = right_hull.index(min(right_hull))
+    n = len(left_hull)
+    m = len(right_hull)
+    i = 0
+    j = 0
 
     while True:
-        if is_counter_clockwise(left_hull[i], right_hull[j], right_hull[j+1]):
-            j += 1 % len(right_hull)
+        if is_counter_clockwise(right_hull[j], left_hull[i], left_hull[(i + 1) % n]):
+            i = (i + 1) % n
+        elif is_clockwise(left_hull[i], right_hull[j], right_hull[(j - 1) % m]):
+            j = (j - 1) % m
+        else:
+            break
 
-        elif is_clockwise(right_hull[j], left_hull[i], left_hull[i-1]):
-            i = (i - 1) % len(left_hull)
+    return left_hull[i], right_hull[j]
 
+def find_lower_tangent(left_hull, right_hull):
+    """
+    Finds the lower tangent between the left and right hulls.
+    """
+    n = len(left_hull)
+    m = len(right_hull)
+    i = 0
+    j = 0
+
+    while True:
+        if is_clockwise(right_hull[(j - 1) % m], left_hull[i], left_hull[(i - 1) % n]):
+            i = (i - 1) % n
+        elif is_counter_clockwise(left_hull[i], right_hull[j], right_hull[(j + 1) % m]):
+            j = (j + 1) % m
         else:
             break
 
     return left_hull[i], right_hull[j]
 
 
-def find_LOWER_tangent(left_hull, right_hull):
-    """
-    Finds the upper tangent between the left and right hulls.
-    """
-
-    i = left_hull.index(max(left_hull))
-    j = right_hull.index(min(right_hull))
-
-    while True:
-        if is_counter_clockwise(right_hull[j], left_hull[i], left_hull[i + 1]):
-            i += 1 % len(left_hull)
-
-        elif is_clockwise(left_hull[i], right_hull[j], right_hull[j - 1]):
-            j = (j - 1) % len(right_hull)
-
-        else:
-            break
-
-    return left_hull[i], right_hull[j]
-
-
+# keep in mind points are split horizontally for some reason so merging is weird
 def merge_convex_hulls(left_hull, right_hull):
     """
-        while RH[UR] != RH[LR]
-            * add point
-            LR += UR % len(RH)
-
-        add RH[LR]
-
+    Merges the left and right convex hulls.
     """
+    LLT, RLT = find_lower_tangent(left_hull, right_hull)
+    LUT, RUT = find_upper_tangent(left_hull, right_hull)
 
-    return 0
+    print('LLT: ', LLT)
+    print('LUT: ', LUT)
+    print('RLT: ', RLT)
+    print('RUT: ', RUT)
+
+    new_hull = []
+
+    # Find the index of the right hull point with the same x-value as RLT
+    idx_RLT = right_hull.index(RLT)
+
+    # Add the points from RUT to RLT (inclusive)
+    for i in range(idx_RLT, -1, -1):
+        p = right_hull[i]
+        if is_clockwise(RLT, LLT, p) and is_clockwise(RUT, LUT, p):
+            new_hull.append(p)
+        else:
+            break
+
+    # Find the index of the left hull point with the same x-value as LUT
+    idx_LUT = left_hull.index(LUT)
+
+    # Add the points from LLT to LUT (inclusive)
+    for i in range(idx_LUT, len(left_hull)):
+        p = left_hull[i]
+        if is_clockwise(LLT, RLT, p) and is_clockwise(LUT, RUT, p):
+            new_hull.append(p)
+        else:
+            break
+
+    return new_hull
+
