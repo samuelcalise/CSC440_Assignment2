@@ -88,7 +88,9 @@ def sort_clockwise(points: List[Point]):
 
 
 def finding_starting_point(point_list: List[Point]) -> List[Point]:
-    "Finds the starting point"
+    """
+    Finds the starting point
+    """
     leftmost = point_list[0]
     for point in point_list[1:]:
         if point[0] < leftmost[0] or (point[0] == leftmost[0] and point[1] < leftmost[1]):
@@ -131,8 +133,10 @@ def base_case_hull(points: List[Point]) -> List[Point]:
 
 
 def compute_hull(points: List[Point]) -> List[Point]:
-    # Sort the points clockwise
-    # sort_clockwise(points)
+    """
+    Given a list of points, computes and returns the convex hull of the points.
+
+    """
 
     points.sort()
 
@@ -143,12 +147,12 @@ def compute_hull(points: List[Point]) -> List[Point]:
     left = points[:middle]
     right = points[middle:]
 
+    # Recursive calls for the left and right hulls for compute hull 
     left_hull = compute_hull(left)
     right_hull = compute_hull(right)
 
 
     UPPER_left, UPPER_right = find_UPPER_tangent(left_hull, right_hull)
-
     LOWER_left, LOWER_right = find_LOWER_tangent(left_hull, right_hull)
 
     merged = merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hull, right_hull)
@@ -161,9 +165,12 @@ def find_UPPER_tangent(left_hull, right_hull):
     """
     Finds the upper tangent between the left and right hulls.
     """
+
+    # Find the rightmost point in the left hull and the leftmost point in the right hull
     i = left_hull.index(max(left_hull))
     j = right_hull.index(min(right_hull))
 
+    # while true loop through the points to find the upper tangent of the two hulls
     while True:
 
         if is_counter_clockwise(left_hull[i], right_hull[j], right_hull[(j+1)% len(right_hull)]):
@@ -180,9 +187,11 @@ def find_LOWER_tangent(left_hull, right_hull):
     """
     Finds the lower tangent between the left and right hulls.
     """
+    # Find the leftmost point in the left hull and the rightmost point in the right hull
     i = left_hull.index(max(left_hull))
     j = right_hull.index(min(right_hull))
 
+    # while true loop through the points to find the lower tangent of the two hulls
     while True:
         next_i = (i + 1) % len(left_hull)
         if is_counter_clockwise(right_hull[j], left_hull[i], left_hull[next_i]):
@@ -195,6 +204,11 @@ def find_LOWER_tangent(left_hull, right_hull):
     return left_hull[i], right_hull[j]
 
 def merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hull, right_hull):
+    """
+    Takes in the upper and lower tangents and the left and right hulls and merges them into one hull.
+    This is called after the hulls being compared has been made and the upper and lower tangents have been found.
+    """
+    
     newer_hull = []
 
     # Add points from the left hull
