@@ -1,3 +1,44 @@
+"""
+Names: Sam Calise and Nick Robillard
+
+Invariant Documentation
+• Invariant: A statement that can be checked at any point in time. It should
+relate to how the algorithm makes progress.
+
+The invariant in this program is based on points given by the user GUI and
+determined based on the length of points `n.` If n <= 6, our base_case_hull is
+invoked and quickly completes the solution of any points less than or equal to 6.
+However, based on the GUI, if the length of points is greater than 6, our divide
+and conquer compute_hull algorithm of O(n logn) is invoked to complete the solution
+of a convex hull that is based on `n` as the number of points that is greater than
+six will be completed with the expected result visually through the GUI.
+
+• Initialization: how is the problem set up
+
+Our Initialization invariant in this program is running compute_hull and determining
+whether, based on the length of the point list, it is greater than six or less than or
+equal to 6. The initial step determines whether a divide-and-conquer or base_case hull
+solution is needed to complete the convex hull solution.
+
+
+• Maintenance: how do I know I’m making progress?
+
+The Maintenance invariant in the program maintains our collection of clockwise points
+to complete the divide-and-conquer algorithm to solve the convex hull. Also, get the
+upper and lower tangents from the left and right hull lists. Finally, the merge algorithm
+can traverse clockwise through the left and right hull lists through the upper and lower
+tangent indexes in the lists.
+
+
+• Termination: how do I know I’m done?
+
+The Termination invariant in this program is based on the merge list successfully
+iterating through the two left and right hull lists in clockwise order. Also, the
+base_case_hull is able to return the points when the length of the list is less than
+or equal to 6 and returning the points is clockwise order.
+
+"""
+
 import math
 import sys
 from typing import List
@@ -87,15 +128,13 @@ def sort_clockwise(points: List[Point]):
     points.sort(key=sort_key)
 
 
-def finding_starting_point(point_list: List[Point]) -> List[Point]:
-    """
-    Finds the starting point
-    """
-    leftmost = point_list[0]
-    for point in point_list[1:]:
-        if point[0] < leftmost[0] or (point[0] == leftmost[0] and point[1] < leftmost[1]):
-            leftmost = point
-    return leftmost
+"""
+Function: left_check -> Returns bool
+
+When implementing our base case for the convex hull, 
+the function is intended to help complete the smaller 
+divided sub-lists from the pointers gathered from the GUI.
+"""
 
 
 def left_check(a: Point, b: Point, c: Point) -> bool:
@@ -103,9 +142,22 @@ def left_check(a: Point, b: Point, c: Point) -> bool:
     return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) > 0
 
 
+"""
+Function: base_case_hull -> Return List[Point]
+
+The purpose of this function is to brute force the smaller 
+subset of points from an initial list. After the while loop 
+completes the computation of points from compute_hull, the 
+points are sorted by the helper function sort_clockwise. 
+When the list of points is passed to this function, the runtime 
+is still O(n logn). The reasoning behind the runtime complexity 
+is due to the List[Point]'s being sorted ahead of time before 
+entering the base case function. This does not hinder the 
+runtime complexity of our divide-and-conquer algorithm.
+"""
+
+
 def base_case_hull(points: List[Point]) -> List[Point]:
-    """ Base case of the recursive algorithm.
-    """
     length = len(points)
     if length <= 3:
         return points
@@ -131,84 +183,123 @@ def base_case_hull(points: List[Point]) -> List[Point]:
     return hull
 
 
+"""
+Function: compute_hull -> Returns List[Point]
+
+The compute_hull function will return the recursive operations 
+of solving the convex hull based on various sizes gathered from 
+user input. The points are sorted based on the elements 'x' 
+values from user input and then split into two subsets, 
+performing the divide and conquer algorithm to solve and display 
+the expected convex hull. After the recursive steps are completed 
+by on the size of the list of points, the function will return 
+the completed List[Points] and draw the expected output in 
+clockwise order.
+"""
+
 
 def compute_hull(points: List[Point]) -> List[Point]:
-    """
-    Given a list of points, computes and returns the convex hull of the points.
-
-    """
-
+    # Sorting values based on x data field of tuple
     points.sort()
 
     if len(points) <= 6:
         return base_case_hull(points)
 
+    # Getting the mid-point of the initial list
     middle = len(points) // 2
+
+    # Divide the initial list into 2 sub lists
     left = points[:middle]
     right = points[middle:]
 
-    # Recursive calls for the left and right hulls for compute hull 
+    # Preforming the divide and conquer algorithm
     left_hull = compute_hull(left)
     right_hull = compute_hull(right)
 
-
+    # Getting the upper and lower tangents from the 2 sub lists
     UPPER_left, UPPER_right = find_UPPER_tangent(left_hull, right_hull)
     LOWER_left, LOWER_right = find_LOWER_tangent(left_hull, right_hull)
 
+    # Preforming the merge of the two lists in clockwise order
     merged = merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hull, right_hull)
 
-
+    # Completed divide and conquer solution
     return merged
 
 
-def find_UPPER_tangent(left_hull, right_hull):
-    """
-    Finds the upper tangent between the left and right hulls.
-    """
+"""
+Function: find_UPPER_tangent -> Returns Point[index], Point[index]
 
-    # Find the rightmost point in the left hull and the leftmost point in the right hull
+When computing the upper tangent of the given lists, we traverse
+clockwise and counterclockwise steps until the program reaches the 
+upper most 2 points of the left and right hull lists
+"""
+
+
+def find_UPPER_tangent(left_hull, right_hull):
     i = left_hull.index(max(left_hull))
     j = right_hull.index(min(right_hull))
 
-    # while true loop through the points to find the upper tangent of the two hulls
     while True:
-
-        if is_counter_clockwise(left_hull[i], right_hull[j], right_hull[(j+1)% len(right_hull)]):
+        # Looking for the upper right most tangent point
+        if is_counter_clockwise(left_hull[i], right_hull[j], right_hull[(j + 1) % len(right_hull)]):
             j = (j + 1) % len(right_hull)
-        elif is_clockwise(right_hull[j], left_hull[i], left_hull[(i - 1)% len(left_hull)]):
+
+        # Looking for the upper left most tangent point
+        elif is_clockwise(right_hull[j], left_hull[i], left_hull[(i - 1) % len(left_hull)]):
             i = (i - 1) % len(left_hull)
         else:
             break
 
+    # Returning the tangent points
     return left_hull[i], right_hull[j]
+
+
+"""
+Function: find_LOWER_tangent -> Returns Point[index], Point[index]
+
+When computing the upper tangent of the given lists, we are traverse
+clockwise and counterclockwise steps until the program reaches the 
+lower most 2 points of the left and right hull lists
+"""
 
 
 def find_LOWER_tangent(left_hull, right_hull):
     """
     Finds the lower tangent between the left and right hulls.
     """
-    # Find the leftmost point in the left hull and the rightmost point in the right hull
     i = left_hull.index(max(left_hull))
     j = right_hull.index(min(right_hull))
 
-    # while true loop through the points to find the lower tangent of the two hulls
     while True:
         next_i = (i + 1) % len(left_hull)
+        # Looking for the lower left most tangent point
         if is_counter_clockwise(right_hull[j], left_hull[i], left_hull[next_i]):
             i = next_i
+
+        # Looking for the lower right most tangent point
         elif is_clockwise(left_hull[i], right_hull[j], right_hull[(j - 1) % len(right_hull)]):
             j = (j - 1) % len(right_hull)
         else:
             break
 
+    # Returning the tangent points
     return left_hull[i], right_hull[j]
 
+
+"""
+Function: merge_convex_hull -> Returns List[Points]
+
+This function aims to iterate through the left and right 
+hulls based on the upper and the lower tangent points to 
+merge into a complete convex hull. The two while loops 
+operate clockwise to merge the points into one ultimate 
+convex hull, providing the correct solution to completing 
+the convex hull.
+"""
+
+
 def merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hull, right_hull):
-    """
-    Takes in the upper and lower tangents and the left and right hulls and merges them into one hull.
-    This is called after the hulls being compared has been made and the upper and lower tangents have been found.
-    """
-    
     newer_hull = []
 
     # Add points from the left hull
@@ -218,7 +309,6 @@ def merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hu
         index = (index + 1) % len(left_hull)
     newer_hull.append(UPPER_left)
 
-
     # Add points from the right hull
     index = right_hull.index(UPPER_right)
     while right_hull[index] != LOWER_right:
@@ -226,5 +316,5 @@ def merge_convex_hulls(UPPER_left, UPPER_right, LOWER_left, LOWER_right, left_hu
         index = (index + 1) % len(right_hull)
     newer_hull.append(LOWER_right)
 
-
+    # Returning the completed merged hull solution
     return newer_hull
